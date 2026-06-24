@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eksplorasi Dataset - HR Attrition</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <nav class="navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/"><i class="fas fa-arrow-trend-up"></i>HR Attrition</a>
+            <div class="nav-links">
+                <a class="nav-link-custom" href="/"><i class="fas fa-home"></i> Home</a>
+                <a class="nav-link-custom active" href="/explore"><i class="fas fa-database"></i> Eksplorasi Data</a>
+                <a class="nav-link-custom" href="/results"><i class="fas fa-chart-bar"></i> Hasil Metode</a>
+            </div>
+            <div class="nav-badges">
+                <span class="badge-soft"><i class="fas fa-microchip"></i> {{ best_model }}</span>
+                <span class="badge-accent"><i class="fas fa-bullseye"></i> F1: {{ best_f1 }}</span>
+                <span class="badge-success-custom"><i class="fas fa-check-circle"></i> Acc: {{ best_acc }}</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+        <h1 class="page-title"><i class="fas fa-database"></i> Eksplorasi Dataset</h1>
+
+        <div class="stats-grid-explore">
+            <div class="stat-card">
+                <div class="stat-icon-explore"><i class="fas fa-table"></i></div>
+                <div>
+                    <div class="stat-label">Total Baris</div>
+                    <div class="stat-number">{{ total_rows }}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-explore"><i class="fas fa-columns"></i></div>
+                <div>
+                    <div class="stat-label">Total Kolom</div>
+                    <div class="stat-number">{{ total_cols }}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-explore green"><i class="fas fa-check-circle"></i></div>
+                <div>
+                    <div class="stat-label">Missing Values</div>
+                    <div class="stat-number">{{ missing }}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-explore amber"><i class="fas fa-tag"></i></div>
+                <div>
+                    <div class="stat-label">Target</div>
+                    <div class="stat-number" style="font-size:14px;">left</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <span><i class="fas fa-chart-pie"></i> Distribusi Target (left)</span>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+                    <div>
+                        <span class="badge-target green">Tetap (0)</span>
+                        <span style="font-weight: 600; margin-left: 8px;">{{ target_0 }} ({{ target_pct_0 }}%)</span>
+                    </div>
+                    <div>
+                        <span class="badge-target red">Keluar (1)</span>
+                        <span style="font-weight: 600; margin-left: 8px;">{{ target_1 }} ({{ target_pct_1 }}%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <span><i class="fas fa-list"></i> Daftar Fitur</span>
+                <span class="badge bg-secondary">{{ feature_count }} fitur</span>
+            </div>
+            <div class="card-body">
+                {{ features_html }}
+            </div>
+        </div>
+
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <span><i class="fas fa-calculator"></i> Statistik Deskriptif</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {{ numeric_stats }}
+                </div>
+            </div>
+        </div>
+
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <span><i class="fas fa-eye"></i> Sample Data (10 baris pertama)</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {{ sample_data }}
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-custom">
+            <i class="fas fa-code"></i> HR Analytics Deep Learning &bull; TabNet &amp; MLP Modern
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

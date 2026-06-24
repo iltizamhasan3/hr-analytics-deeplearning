@@ -1,0 +1,20 @@
+{
+  "feature_cols": [
+    "satisfaction_level",
+    "last_evaluation",
+    "number_project",
+    "average_montly_hours",
+    "time_spend_company",
+    "Work_accident",
+    "promotion_last_5years",
+    "sales",
+    "salary"
+  ],
+  "target_col": "left",
+  "best_model": "MLP_NoHandling",
+  "f1_score": 0.9246753246753247,
+  "accuracy": 0.9758333333333333,
+  "recall": 0.8944723618090452,
+  "input_dim": 9,
+  "dataset_size": 11991
+}

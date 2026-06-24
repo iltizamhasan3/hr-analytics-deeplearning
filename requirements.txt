@@ -1,0 +1,26 @@
+# Core
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+
+# Deep Learning
+tensorflow
+pytorch-tabnet
+
+# Imbalance Handling
+imbalanced-learn
+
+# GUI
+fastapi
+uvicorn
+sqlalchemy
+aiosqlite
+jinja2
+python-multipart
+
+# Utility
+jupyter
+notebook
+ipykernel
