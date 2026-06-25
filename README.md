@@ -21,26 +21,28 @@ Aplikasi ini dilengkapi dengan:
 
 | Metode | Arsitektur | Loss Function | Penanganan Imbalance |
 |--------|------------|---------------|---------------------|
-| **MLP Deep + Focal Loss** | 4 Hidden Layers (256, 128, 64, 32) + BatchNorm + Dropout | Focal Loss (γ=2.0, α=0.25) | Focal Loss |
-| **TabNet** | Sequential Attention + GLU | Binary Crossentropy | SMOTE-ENN |
-| **MLP Modern** | 3 Hidden Layers (128, 64, 32) + BatchNorm + Dropout | Binary Crossentropy | Class Weight |
+| **MLP + Focal Loss** | 4 Hidden Layers (256, 128, 64, 32) + BatchNorm + Dropout | Focal Loss (γ=2.0, α=0.25) | Focal Loss (inherent) |
+| **MLP + Class Weight** | 3 Hidden Layers (128, 64, 32) + BatchNorm + Dropout | Binary Crossentropy | Class Weight |
+| **TabNet** | Sequential Attention + GLU | Binary Crossentropy | SMOTE-ENN / Class Weight |
 
 ---
 
 ## 📊 Hasil Model Terbaik
 
-| Model | F1-Score | Accuracy | Recall |
-|-------|----------|----------|--------|
-| **MLP Deep + Focal Loss** | **0.9302** | **0.9775** | **0.9195** |
-| MLP Modern + Class Weight | 0.9082 | 0.9689 | 0.9295 |
-| TabNet + No Handling | 0.8929 | 0.9639 | 0.9094 |
-| TabNet + SMOTE-ENN | 0.8510 | 0.9461 | 0.9295 |
+| Model | F1-Score | Accuracy | Precision | Recall |
+|-------|----------|----------|-----------|--------|
+| **MLP + No Handling** | **0.9437** | **0.9740** | **0.9732** | **0.9160** |
+| MLP + Class Weight | 0.9427 | 0.9733 | 0.9648 | 0.9216 |
+| TabNet + No Handling | 0.9354 | 0.9700 | 0.9588 | 0.9132 |
+| MLP + SMOTE-ENN | 0.9318 | 0.9680 | 0.9452 | 0.9188 |
+| TabNet + SMOTE-ENN | 0.9186 | 0.9607 | 0.9049 | 0.9328 |
+| TabNet + Class Weight | 0.9166 | 0.9593 | 0.8957 | 0.9384 |
 
-**Model Terbaik: MLP Deep + Focal Loss (F1-Score: 0.9302)**
+**Model Terbaik: MLP + Focal Loss (tanpa penanganan imbalance tambahan, F1-Score: 0.9437)**
 
 ---
 
-## 🏗️ Arsitektur MLP Deep + Focal Loss
+## 🏗️ Arsitektur MLP + Focal Loss (Model Terbaik)
 
 ```
 Input Layer (9 fitur)
@@ -71,11 +73,8 @@ hr-analytics-deeplearning/
 │
 ├── app/
 │   ├── __init__.py
-│   ├── main.py
-│   ├── ml_model.py
-│   ├── database.py
-│   ├── models.py
-│   ├── schemas.py
+│   ├── main.py              # FastAPI app + routing + database
+│   ├── ml_model.py          # Load model, preprocessing, prediksi
 │   ├── templates/
 │   │   ├── index.html
 │   │   ├── explore.html
@@ -138,15 +137,12 @@ Download `HR_comma_sep.csv` dari [Kaggle](https://www.kaggle.com/datasets/jackso
 ### 5. Jalankan Training (Opsional)
 
 ```bash
-cd notebooks
-jupyter notebook train_models_final_v2.ipynb
-# Jalankan semua cell
+jupyter notebook notebooks/train_models_final_v2.ipynb
 ```
 
-### 6. Jalankan Aplikasi GUI
+### 6. Jalankan Aplikasi Web
 
 ```bash
-cd ..
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -165,7 +161,7 @@ http://127.0.0.1:8000
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  🔍 HR Attrition Predictor                                         │
-│  Model: MLP_Deep_FocalLoss  F1: 0.9302  Acc: 0.9775               │
+│  Model: MLP_NoHandling  F1: 0.9437  Acc: 0.9740                   │
 ├─────────────────────────────────────────────────────────────────────┤
 │  📊 Statistik: Total Karyawan: 0 | Tetap: 0 | Keluar: 0 | Rate: 0%│
 ├─────────────────────────────────────────────────────────────────────┤
@@ -183,11 +179,11 @@ http://127.0.0.1:8000
 │  ✅ Hasil: Karyawan TETAP (Probabilitas: 78.5%)                    │
 ├─────────────────────────────────────────────────────────────────────┤
 │  📋 Riwayat Prediksi                                               │
-│  ┌───┬──────────┬──────────┬──────────┬──────────┬──────────┐    │
-│  │ # │ Dept     │ Satis.   │ Projects │ Hasil    │ Waktu    │    │
-│  ├───┼──────────┼──────────┼──────────┼──────────┼──────────┤    │
-│  │ 1 │ Sales    │ 0.8      │ 5        │ TETAP    │ 25/06/26 │    │
-│  └───┴──────────┴──────────┴──────────┴──────────┴──────────┘    │
+│  ┌───┬──────┬───────┬──────┬──────┬───────┬──────┬────────┬──────┐│
+│  │ # │ Dept │Satis. │ Eval │ Proj.│ Hours │Tenure│Accident│Salary││
+│  ├───┼──────┼───────┼──────┼──────┼───────┼──────┼────────┼──────┤│
+│  │ 1 │Sales │ 0.2   │ 0.5  │ 6    │ 280   │ 8    │ Tidak  │ Low  ││
+│  └───┴──────┴───────┴──────┴──────┴───────┴──────┴────────┴──────┘│
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -273,22 +269,23 @@ ipykernel
 
 ## 📈 Hasil Evaluasi
 
-### Perbandingan 6 Kombinasi
+### Perbandingan 6 Kombinasi (dari comparison_results.csv)
 
-| Kombinasi | F1-Score | Accuracy | Recall | Training Time (s) |
-|-----------|----------|----------|--------|-------------------|
-| **MLP_Deep_FocalLoss_SMOTE** | **0.9302** | **0.9775** | **0.9195** | 45.2 |
-| MLP_ClassWeight | 0.9082 | 0.9689 | 0.9295 | 9.6 |
-| TabNet_NoHandling | 0.8929 | 0.9639 | 0.9094 | 27.7 |
-| TabNet_SMOTE_ENN | 0.8510 | 0.9461 | 0.9295 | 43.5 |
-| MLP_NoHandling | 0.9272 | 0.9761 | 0.9195 | 10.3 |
-| MLP_SMOTE_ENN | 0.8748 | 0.9561 | 0.9262 | 13.9 |
+| Ranking | Kombinasi | F1-Score | Accuracy | Precision | Recall | Training (s) |
+|---------|-----------|----------|----------|-----------|--------|-------------|
+| **#1** | **MLP_NoHandling** | **0.9437** | **0.9740** | **0.9732** | **0.9160** | 141.6 |
+| #2 | MLP_ClassWeight | 0.9427 | 0.9733 | 0.9648 | 0.9216 | 77.7 |
+| #3 | TabNet_NoHandling | 0.9354 | 0.9700 | 0.9588 | 0.9132 | 196.1 |
+| #4 | MLP_SMOTE_ENN | 0.9318 | 0.9680 | 0.9452 | 0.9188 | 54.4 |
+| #5 | TabNet_SMOTE_ENN | 0.9186 | 0.9607 | 0.9049 | 0.9328 | 282.4 |
+| #6 | TabNet_ClassWeight | 0.9166 | 0.9593 | 0.8957 | 0.9384 | 279.1 |
 
 ### Interpretasi
 
-- **MLP Deep + Focal Loss** memberikan F1-Score tertinggi (0.9302)
-- **Class Weight** efektif untuk MLP Modern
-- **TabNet** lebih lambat training tapi performa stabil
+- **MLP + Focal Loss tanpa imbalance handling tambahan** memberikan F1-Score tertinggi (0.9437)
+- **Focal Loss** (γ=2.0, α=0.25) sudah cukup menangani imbalance dataset (~24% attrition)
+- **MLP + Class Weight** hampir menyamai (F1=0.9427) dengan waktu training lebih cepat
+- **TabNet** unggul di Recall tertinggi (0.9384 dengan Class Weight) tapi F1 lebih rendah
 
 ---
 
@@ -314,12 +311,25 @@ ls -la models/
 # Pastikan best_model.h5, scaler.pkl, encoders.pkl, feature_info.json ada
 ```
 
+### Error: Keras version incompatibility (`GlorotUniform`)
+
+Jika muncul error `GlorotUniform.__init__() got unexpected keyword arguments 'input_axes'` saat load model:
+
+```bash
+pip install --upgrade tensorflow keras
+```
+Atau gunakan TensorFlow 2.13 yang kompatibel dengan model yang disimpan.
+
 ### Error: Database tidak bisa menyimpan
 
 ```bash
 rm hr_prediction.db
 # Database akan dibuat ulang otomatis
 ```
+
+### Catatan: Tenure Blindspot
+
+Model memiliki keterbatasan pada karyawan dengan **tenure >= 7 tahun** karena dalam dataset training tidak ada satupun karyawan dengan masa kerja >= 7 tahun yang berstatus *left* (keluar). Aplikasi mengimplementasikan **koreksi otomatis** (`_adjust_probability` di `ml_model.py`) yang meningkatkan probabilitas prediksi berdasarkan jumlah faktor risiko pada kasus tenure tinggi.
 
 ---
 

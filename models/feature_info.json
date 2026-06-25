@@ -12,9 +12,12 @@
   ],
   "target_col": "left",
   "best_model": "MLP_NoHandling",
-  "f1_score": 0.9246753246753247,
-  "accuracy": 0.9758333333333333,
-  "recall": 0.8944723618090452,
+  "f1_score": 0.9437229437229437,
+  "accuracy": 0.974,
+  "recall": 0.9159663865546218,
+  "precision": 0.9732142857142857,
+  "optimal_threshold": 0.40,
   "input_dim": 9,
-  "dataset_size": 11991
+  "dataset_size": 14999,
+  "model_type": "mlp"
 }

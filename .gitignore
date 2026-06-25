@@ -75,11 +75,6 @@ docs/_build/
 .pybuilder/
 target/
 
-# Jupyter Notebooks
-.ipynb_checkpoints/
-*.ipynb
-!notebooks/*.ipynb
-
 # IPython
 profile_default/
 ipython_config.py
@@ -170,14 +165,10 @@ data/*.xlsx
 !data/.gitkeep
 
 # ============================================
-# MODELS (OPSIONAL - KOMENTAR UNTUK SIMPAN MODEL)
+# MODELS (track model files explicitly)
 # ============================================
 
-# models/
-# *.h5
-# *.pkl
-# *.json
-# *.zip
+!models/*.h5
 
 # ============================================
 # IDE / EDITOR
@@ -255,15 +246,6 @@ uvicorn.log
 .env.*.local
 secrets.yaml
 config.yaml
-
-# ============================================
-# JUPYTER
-# ============================================
-
-.ipynb_checkpoints/
-*/.ipynb_checkpoints/
-*.ipynb
-!notebooks/*.ipynb
 
 # ============================================
 # COMPRESSED FILES

@@ -44,6 +44,7 @@ class PredictionHistory(Base):
     salary = Column(String(20))
     prediction_result = Column(String(20))
     probability = Column(Float)
+    threshold_used = Column(Float, default=0.3)
     created_at = Column(DateTime, default=datetime.now)
 
 Base.metadata.create_all(bind=engine)
@@ -69,9 +70,11 @@ def get_model_info():
     info = ml_model.get_model_info()
     return {
         'best_model': info.get('best_model', 'MLP_Deep_FocalLoss'),
-        'f1_score': info.get('f1_score', 0.9220),
-        'accuracy': info.get('accuracy', 0.9761),
-        'recall': info.get('recall', 0.9195)
+        'f1_score': info.get('f1_score', 0.9302),
+        'accuracy': info.get('accuracy', 0.9775),
+        'recall': info.get('recall', 0.9195),
+        'precision': info.get('precision', 0.9428),
+        'threshold': info.get('threshold', 0.3)
     }
 
 def read_template(filename):
@@ -81,7 +84,7 @@ def read_template(filename):
 # ============================================
 # HELPER FUNCTIONS
 # ============================================
-def generate_prediction_html(result, probability):
+def generate_prediction_html(result, probability, threshold):
     card_class = "result-success" if result == "TETAP" else "result-danger"
     badge_class = "badge-green" if result == "TETAP" else "badge-red"
     icon = "fa-circle-check" if result == "TETAP" else "fa-circle-exclamation"
@@ -93,6 +96,9 @@ def generate_prediction_html(result, probability):
             <div class="result-text">
                 <div class="result-title">Karyawan Diprediksi: <strong>{result}</strong></div>
                 <div class="result-prob">Probabilitas: <strong>{probability}</strong></div>
+                <div class="result-prob" style="font-size:11px; color:#94a3b8; margin-top:4px;">
+                    <i class="fas fa-sliders-h"></i> Threshold: {threshold:.2f}
+                </div>
             </div>
             <div><span class="result-badge {badge_class}">{result}</span></div>
         </div>
@@ -106,15 +112,21 @@ def generate_history_rows(history):
     rows = ""
     for idx, record in enumerate(history, 1):
         tag_class = "tag-red" if record.prediction_result == "KELUAR" else "tag-green"
+        accident_label = "Ya" if record.work_accident == 1 else "Tidak"
         rows += f"""
         <tr>
             <td>{idx}</td>
             <td>{record.sales}</td>
             <td>{record.satisfaction_level}</td>
+            <td>{record.last_evaluation}</td>
             <td>{record.number_project}</td>
             <td>{record.average_montly_hours}</td>
+            <td>{record.time_spend_company}</td>
+            <td>{accident_label}</td>
+            <td>{record.salary}</td>
             <td><span class="status-tag {tag_class}">{record.prediction_result}</span></td>
             <td>{record.probability * 100:.1f}%</td>
+            <td>{record.threshold_used:.2f}</td>
             <td>{record.created_at.strftime('%d/%m/%y %H:%M')}</td>
         </tr>
         """
@@ -135,10 +147,14 @@ async def read_root(request: Request, db: Session = Depends(get_db)):
     html = html.replace("{{ best_model }}", info['best_model'])
     html = html.replace("{{ best_f1 }}", f"{info['f1_score']:.4f}")
     html = html.replace("{{ best_acc }}", f"{info['accuracy']:.4f}")
+    html = html.replace("{{ best_recall }}", f"{info['recall']:.4f}")
+    html = html.replace("{{ best_precision }}", f"{info['precision']:.4f}")
+    html = html.replace("{{ threshold }}", f"{info['threshold']:.2f}")
     html = html.replace("{{ prediction_html }}", "")
     html = html.replace("{{ history_count }}", str(len(history)))
     html = html.replace("{{ history_rows }}", generate_history_rows(history))
     html = html.replace("{{ history_empty }}", "" if history else '<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada riwayat prediksi</p></div>')
+    html = html.replace("{{ error_message }}", "")
     
     return HTMLResponse(content=html)
 
@@ -156,6 +172,40 @@ async def predict(
     salary: str = Form(...),
     db: Session = Depends(get_db)
 ):
+    errors = []
+    if not (0.0 <= satisfaction_level <= 1.0):
+        errors.append("Satisfaction Level harus antara 0.0 - 1.0")
+    if not (0.0 <= last_evaluation <= 1.0):
+        errors.append("Last Evaluation harus antara 0.0 - 1.0")
+    if not (1 <= number_project <= 10):
+        errors.append("Number of Projects harus antara 1 - 10")
+    if not (50 <= average_montly_hours <= 400):
+        errors.append("Monthly Hours harus antara 50 - 400")
+    if not (1 <= time_spend_company <= 20):
+        errors.append("Years at Company harus antara 1 - 20")
+    if work_accident not in (0, 1):
+        errors.append("Work Accident tidak valid")
+    if promotion_last_5years not in (0, 1):
+        errors.append("Promotion tidak valid")
+
+    if errors:
+        info = get_model_info()
+        html = read_template("index.html")
+        error_html = '<div class="alert alert-danger" style="padding:12px 20px;border-radius:8px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;margin-bottom:16px;"><i class="fas fa-exclamation-triangle"></i> ' + '<br>'.join(errors) + '</div>'
+        html = html.replace("{{ best_model }}", info['best_model'])
+        html = html.replace("{{ best_f1 }}", f"{info['f1_score']:.4f}")
+        html = html.replace("{{ best_acc }}", f"{info['accuracy']:.4f}")
+        html = html.replace("{{ best_recall }}", f"{info['recall']:.4f}")
+        html = html.replace("{{ best_precision }}", f"{info['precision']:.4f}")
+        html = html.replace("{{ threshold }}", f"{info['threshold']:.2f}")
+        html = html.replace("{{ prediction_html }}", "")
+        html = html.replace("{{ error_message }}", error_html)
+        history = db.query(PredictionHistory).order_by(PredictionHistory.created_at.desc()).limit(50).all()
+        html = html.replace("{{ history_count }}", str(len(history)))
+        html = html.replace("{{ history_rows }}", generate_history_rows(history))
+        html = html.replace("{{ history_empty }}", "" if history else '<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada riwayat prediksi</p></div>')
+        return HTMLResponse(content=html)
+
     input_data = {
         'satisfaction_level': satisfaction_level,
         'last_evaluation': last_evaluation,
@@ -169,6 +219,7 @@ async def predict(
     }
 
     result, prob = ml_model.predict(input_data)
+    threshold = ml_model.feature_info.get('optimal_threshold', 0.3) if ml_model.feature_info else 0.3
 
     new_record = PredictionHistory(
         satisfaction_level=satisfaction_level,
@@ -181,7 +232,8 @@ async def predict(
         sales=sales,
         salary=salary,
         prediction_result=result,
-        probability=prob
+        probability=prob,
+        threshold_used=threshold
     )
     db.add(new_record)
     db.commit()
@@ -194,17 +246,21 @@ async def predict(
     info = get_model_info()
     html = read_template("index.html")
     
-    prediction_html = generate_prediction_html(result, f"{prob:.2%}")
+    prediction_html = generate_prediction_html(result, f"{prob:.2%}", threshold)
     history_rows = generate_history_rows(history)
     history_empty = "" if history else '<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada riwayat prediksi</p></div>'
     
     html = html.replace("{{ best_model }}", info['best_model'])
     html = html.replace("{{ best_f1 }}", f"{info['f1_score']:.4f}")
     html = html.replace("{{ best_acc }}", f"{info['accuracy']:.4f}")
+    html = html.replace("{{ best_recall }}", f"{info['recall']:.4f}")
+    html = html.replace("{{ best_precision }}", f"{info['precision']:.4f}")
+    html = html.replace("{{ threshold }}", f"{info['threshold']:.2f}")
     html = html.replace("{{ prediction_html }}", prediction_html)
     html = html.replace("{{ history_count }}", str(len(history)))
     html = html.replace("{{ history_rows }}", history_rows)
     html = html.replace("{{ history_empty }}", history_empty)
+    html = html.replace("{{ error_message }}", "")
     
     return HTMLResponse(content=html)
 

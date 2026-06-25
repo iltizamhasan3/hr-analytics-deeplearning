@@ -27,6 +27,9 @@
                 <span class="badge-soft"><i class="fas fa-microchip"></i> {{ best_model }}</span>
                 <span class="badge-accent"><i class="fas fa-bullseye"></i> F1: {{ best_f1 }}</span>
                 <span class="badge-success-custom"><i class="fas fa-check-circle"></i> Acc: {{ best_acc }}</span>
+                <span class="badge-soft" style="background: #fef3c7; color: #92400e;">
+                    <i class="fas fa-sliders-h"></i> Threshold: {{ threshold }}
+                </span>
             </div>
         </div>
     </nav>
@@ -69,6 +72,8 @@
         </div>
 
         <!-- FORM -->
+        {{ error_message }}
+
         <div class="card-form">
             <div class="card-header-custom">
                 <i class="fas fa-pen-to-square"></i> Input Data Karyawan
@@ -81,7 +86,7 @@
                             <label><i class="fas fa-face-smile"></i> Satisfaction Level</label>
                             <div class="input-group-custom">
                                 <span class="input-icon"><i class="fas fa-sliders"></i></span>
-                                <input type="number" step="0.01" class="form-control" name="satisfaction_level" placeholder="0.0 - 1.0" required>
+                                <input type="number" step="0.01" class="form-control" name="satisfaction_level" placeholder="0.0 - 1.0" min="0" max="1" required>
                             </div>
                         </div>
 
@@ -89,7 +94,7 @@
                             <label><i class="fas fa-star"></i> Last Evaluation</label>
                             <div class="input-group-custom">
                                 <span class="input-icon"><i class="fas fa-sliders"></i></span>
-                                <input type="number" step="0.01" class="form-control" name="last_evaluation" placeholder="0.0 - 1.0" required>
+                                <input type="number" step="0.01" class="form-control" name="last_evaluation" placeholder="0.0 - 1.0" min="0" max="1" required>
                             </div>
                         </div>
 
@@ -97,7 +102,7 @@
                             <label><i class="fas fa-folder-open"></i> Number of Projects</label>
                             <div class="input-group-custom">
                                 <span class="input-icon"><i class="fas fa-hashtag"></i></span>
-                                <input type="number" class="form-control" name="number_project" placeholder="2-7" required>
+                                <input type="number" class="form-control" name="number_project" placeholder="2-7" min="1" max="10" required>
                             </div>
                         </div>
 
@@ -105,7 +110,7 @@
                             <label><i class="fas fa-clock"></i> Monthly Hours</label>
                             <div class="input-group-custom">
                                 <span class="input-icon"><i class="fas fa-clock"></i></span>
-                                <input type="number" class="form-control" name="average_montly_hours" placeholder="120-310" required>
+                                <input type="number" class="form-control" name="average_montly_hours" placeholder="120-310" min="50" max="400" required>
                             </div>
                         </div>
 
@@ -113,7 +118,7 @@
                             <label><i class="fas fa-calendar"></i> Years at Company</label>
                             <div class="input-group-custom">
                                 <span class="input-icon"><i class="fas fa-calendar"></i></span>
-                                <input type="number" class="form-control" name="time_spend_company" placeholder="2-10" required>
+                                <input type="number" class="form-control" name="time_spend_company" placeholder="2-10" min="1" max="20" required>
                             </div>
                         </div>
 
@@ -195,10 +200,15 @@
                             <th>#</th>
                             <th>Dept</th>
                             <th>Satis.</th>
+                            <th>Eval</th>
                             <th>Proj.</th>
                             <th>Hours</th>
+                            <th>Tenure</th>
+                            <th>Accident</th>
+                            <th>Salary</th>
                             <th>Hasil</th>
                             <th>Prob</th>
+                            <th>Threshold</th>
                             <th>Waktu</th>
                         </tr>
                     </thead>
@@ -211,7 +221,7 @@
         </div>
 
         <div class="footer-custom">
-            <i class="fas fa-code"></i> HR Analytics Deep Learning &bull; MLP &amp; TabNet
+            <i class="fas fa-code"></i> HR Analytics Deep Learning &bull; MLP Deep + Focal Loss
         </div>
 
     </div>
