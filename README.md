@@ -19,30 +19,33 @@ Aplikasi ini dilengkapi dengan:
 
 ## 🎯 Metode Deep Learning yang Digunakan
 
-| Metode | Arsitektur | Loss Function | Penanganan Imbalance |
-|--------|------------|---------------|---------------------|
-| **MLP + Focal Loss** | 4 Hidden Layers (256, 128, 64, 32) + BatchNorm + Dropout | Focal Loss (γ=2.0, α=0.25) | Focal Loss (inherent) |
-| **MLP + Class Weight** | 3 Hidden Layers (128, 64, 32) + BatchNorm + Dropout | Binary Crossentropy | Class Weight |
-| **TabNet** | Sequential Attention + GLU | Binary Crossentropy | SMOTE-ENN / Class Weight |
+| Kombinasi | Arsitektur | Loss Function | Penanganan Imbalance |
+|-----------|------------|---------------|---------------------|
+| **MLP_NoHandling** | MLP 4-layer (256-128-64-32) + BN + Dropout | Focal Loss (γ=2.0, α=0.25) | None |
+| **MLP_SMOTE_ENN** | MLP 4-layer (256-128-64-32) + BN + Dropout | Focal Loss (γ=2.0, α=0.25) | SMOTE-ENN |
+| **MLP_ClassWeight** | MLP 4-layer (256-128-64-32) + BN + Dropout | Focal Loss (γ=2.0, α=0.5) | Class Weight + Focal α=0.5 |
+| **TabNet_NoHandling** | TabNet (n_d=64, n_a=64, steps=5) | Cross-Entropy (default) | None |
+| **TabNet_SMOTE_ENN** | TabNet (n_d=64, n_a=64, steps=5) | Cross-Entropy (default) | SMOTE-ENN |
+| **TabNet_ClassWeight** | TabNet (n_d=64, n_a=64, steps=5) | Cross-Entropy (default) | Duplikasi Fraud 3x |
 
 ---
 
 ## 📊 Hasil Model Terbaik
 
-| Model | F1-Score | Accuracy | Precision | Recall |
-|-------|----------|----------|-----------|--------|
-| **MLP + No Handling** | **0.9437** | **0.9740** | **0.9732** | **0.9160** |
-| MLP + Class Weight | 0.9427 | 0.9733 | 0.9648 | 0.9216 |
-| TabNet + No Handling | 0.9354 | 0.9700 | 0.9588 | 0.9132 |
-| MLP + SMOTE-ENN | 0.9318 | 0.9680 | 0.9452 | 0.9188 |
-| TabNet + SMOTE-ENN | 0.9186 | 0.9607 | 0.9049 | 0.9328 |
-| TabNet + Class Weight | 0.9166 | 0.9593 | 0.8957 | 0.9384 |
+| Ranking | Kombinasi | F1-Score | Accuracy | Precision | Recall |
+|---------|-----------|----------|----------|-----------|--------|
+| **#1** | **MLP_NoHandling** | **0.9437** | **0.9740** | **0.9732** | **0.9160** |
+| #2 | MLP_ClassWeight | 0.9427 | 0.9733 | 0.9648 | 0.9216 |
+| #3 | TabNet_NoHandling | 0.9354 | 0.9700 | 0.9588 | 0.9132 |
+| #4 | MLP_SMOTE_ENN | 0.9318 | 0.9680 | 0.9452 | 0.9188 |
+| #5 | TabNet_SMOTE_ENN | 0.9186 | 0.9607 | 0.9049 | 0.9328 |
+| #6 | TabNet_ClassWeight | 0.9166 | 0.9593 | 0.8957 | 0.9384 |
 
-**Model Terbaik: MLP + Focal Loss (tanpa penanganan imbalance tambahan, F1-Score: 0.9437)**
+**Model Terbaik: MLP_NoHandling (Focal Loss + No imbalance handling, F1-Score: 0.9437)**
 
 ---
 
-## 🏗️ Arsitektur MLP + Focal Loss (Model Terbaik)
+## 🏗️ Arsitektur MLP (MLP_NoHandling — Model Terbaik)
 
 ```
 Input Layer (9 fitur)
@@ -161,7 +164,7 @@ http://127.0.0.1:8000
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  🔍 HR Attrition Predictor                                         │
-│  Model: MLP_NoHandling  F1: 0.9437  Acc: 0.9740                   │
+│  Model: MLP_NoHandling  F1: 0.9437  Acc: 0.9740                  │
 ├─────────────────────────────────────────────────────────────────────┤
 │  📊 Statistik: Total Karyawan: 0 | Tetap: 0 | Keluar: 0 | Rate: 0%│
 ├─────────────────────────────────────────────────────────────────────┤
@@ -282,10 +285,9 @@ ipykernel
 
 ### Interpretasi
 
-- **MLP + Focal Loss tanpa imbalance handling tambahan** memberikan F1-Score tertinggi (0.9437)
-- **Focal Loss** (γ=2.0, α=0.25) sudah cukup menangani imbalance dataset (~24% attrition)
-- **MLP + Class Weight** hampir menyamai (F1=0.9427) dengan waktu training lebih cepat
-- **TabNet** unggul di Recall tertinggi (0.9384 dengan Class Weight) tapi F1 lebih rendah
+- **MLP_NoHandling** memberikan F1-Score tertinggi (0.9437) — Focal Loss tanpa imbalance handling tambahan sudah optimal
+- **MLP_ClassWeight** (Focal α=0.5 + class_weight) hampir menyamai (F1=0.9427) dengan waktu training lebih cepat
+- **TabNet** unggul di Recall tertinggi (TabNet_ClassWeight: 0.9384) tapi Precision lebih rendah sehingga F1 di bawah MLP
 
 ---
 
