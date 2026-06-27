@@ -34,38 +34,50 @@ Aplikasi ini dilengkapi dengan:
 
 | Ranking | Kombinasi | F1-Score | Accuracy | Precision | Recall |
 |---------|-----------|----------|----------|-----------|--------|
-| **#1** | **MLP_NoHandling** | **0.9437** | **0.9740** | **0.9732** | **0.9160** |
-| #2 | MLP_ClassWeight | 0.9427 | 0.9733 | 0.9648 | 0.9216 |
-| #3 | TabNet_NoHandling | 0.9354 | 0.9700 | 0.9588 | 0.9132 |
-| #4 | MLP_SMOTE_ENN | 0.9318 | 0.9680 | 0.9452 | 0.9188 |
-| #5 | TabNet_SMOTE_ENN | 0.9186 | 0.9607 | 0.9049 | 0.9328 |
-| #6 | TabNet_ClassWeight | 0.9166 | 0.9593 | 0.8957 | 0.9384 |
+| **#1** | **TabNet_NoHandling** | **0.9302** | **0.9775** | **0.9574** | **0.9045** |
+| #2 | MLP_ClassWeight | 0.9278 | 0.9767 | 0.9524 | 0.9045 |
+| #3 | MLP_NoHandling | 0.9243 | 0.9758 | 0.9620 | 0.8894 |
+| #4 | MLP_SMOTE_ENN | 0.9023 | 0.9675 | 0.9000 | 0.9045 |
+| #5 | TabNet_ClassWeight | 0.8916 | 0.9633 | 0.8744 | 0.9095 |
+| #6 | TabNet_SMOTE_ENN | 0.8438 | 0.9442 | 0.7870 | 0.9095 |
 
-**Model Terbaik: MLP_NoHandling (Focal Loss + No imbalance handling, F1-Score: 0.9437)**
+**Model Terbaik: TabNet_NoHandling (F1-Score: 0.9302, Accuracy: 0.9775)**
 
 ---
 
-## 🏗️ Arsitektur MLP (MLP_NoHandling — Model Terbaik)
+## 🏗️ Arsitektur TabNet (TabNet_NoHandling — Model Terbaik)
 
 ```
-Input Layer (9 fitur)
+Input Features (9 fitur)
     ↓
-Dense(256, ReLU) + BatchNormalization + Dropout(0.2)
+Feature Transformer (shared)
     ↓
-Dense(128, ReLU) + BatchNormalization + Dropout(0.2)
+Attentive Transformer  →  Sparse Feature Mask
     ↓
-Dense(64, ReLU) + BatchNormalization + Dropout(0.2)
+Feature Transformer (decision)
     ↓
-Dense(32, ReLU) + BatchNormalization + Dropout(0.2)
+  ┌──────────────────────────────────┐
+  │  Aggregation (steps=5)           │
+  │  n_d = 64, n_a = 64              │
+  └──────────────────────────────────┘
     ↓
-Output Layer (Sigmoid)
+Output Layer (Softmax)
 ```
 
-**Focal Loss**:
-```
-FL(p_t) = -α(1-p_t)^γ log(p_t)
-```
-dengan γ = 2.0, α = 0.25
+**Loss Function**: Cross-Entropy (default pytorch_tabnet)
+
+**Parameter Kunci**:
+| Parameter | Nilai |
+|-----------|-------|
+| n_d (decision width) | 64 |
+| n_a (attention width) | 64 |
+| n_steps | 5 |
+| gamma (relaxation) | 1.5 |
+| lambda_sparse | 1e-3 |
+| Optimizer | Adam (lr=2e-2) |
+| Batch Size | 256 |
+| Scheduler | ReduceLROnPlateau |
+| Early Stopping | patience=20
 
 ---
 
@@ -87,6 +99,7 @@ hr-analytics-deeplearning/
 │
 ├── models/
 │   ├── best_model.h5
+│   ├── tabnet_best_model/
 │   ├── scaler.pkl
 │   ├── encoders.pkl
 │   ├── feature_info.json
@@ -97,7 +110,7 @@ hr-analytics-deeplearning/
 │   └── HR_comma_sep.csv
 │
 ├── notebooks/
-│   └── train_models_final_v2.ipynb
+│   └── train_models.ipynb
 │
 ├── requirements.txt
 ├── README.md
@@ -140,7 +153,7 @@ Download `HR_comma_sep.csv` dari [Kaggle](https://www.kaggle.com/datasets/jackso
 ### 5. Jalankan Training (Opsional)
 
 ```bash
-jupyter notebook notebooks/train_models_final_v2.ipynb
+jupyter notebook notebooks/train_models.ipynb
 ```
 
 ### 6. Jalankan Aplikasi Web
@@ -164,7 +177,7 @@ http://127.0.0.1:8000
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  🔍 HR Attrition Predictor                                         │
-│  Model: MLP_NoHandling  F1: 0.9437  Acc: 0.9740                  │
+│  Model: TabNet_NoHandling  F1: 0.9302  Acc: 0.9775              │
 ├─────────────────────────────────────────────────────────────────────┤
 │  📊 Statistik: Total Karyawan: 0 | Tetap: 0 | Keluar: 0 | Rate: 0%│
 ├─────────────────────────────────────────────────────────────────────┤
@@ -276,18 +289,18 @@ ipykernel
 
 | Ranking | Kombinasi | F1-Score | Accuracy | Precision | Recall | Training (s) |
 |---------|-----------|----------|----------|-----------|--------|-------------|
-| **#1** | **MLP_NoHandling** | **0.9437** | **0.9740** | **0.9732** | **0.9160** | 141.6 |
-| #2 | MLP_ClassWeight | 0.9427 | 0.9733 | 0.9648 | 0.9216 | 77.7 |
-| #3 | TabNet_NoHandling | 0.9354 | 0.9700 | 0.9588 | 0.9132 | 196.1 |
-| #4 | MLP_SMOTE_ENN | 0.9318 | 0.9680 | 0.9452 | 0.9188 | 54.4 |
-| #5 | TabNet_SMOTE_ENN | 0.9186 | 0.9607 | 0.9049 | 0.9328 | 282.4 |
-| #6 | TabNet_ClassWeight | 0.9166 | 0.9593 | 0.8957 | 0.9384 | 279.1 |
+| **#1** | **TabNet_NoHandling** | **0.9302** | **0.9775** | **0.9574** | **0.9045** | 188.1 |
+| #2 | MLP_ClassWeight | 0.9278 | 0.9767 | 0.9524 | 0.9045 | 82.7 |
+| #3 | MLP_NoHandling | 0.9243 | 0.9758 | 0.9620 | 0.8894 | 88.4 |
+| #4 | MLP_SMOTE_ENN | 0.9023 | 0.9675 | 0.9000 | 0.9045 | 56.8 |
+| #5 | TabNet_ClassWeight | 0.8916 | 0.9633 | 0.8744 | 0.9095 | 267.2 |
+| #6 | TabNet_SMOTE_ENN | 0.8438 | 0.9442 | 0.7870 | 0.9095 | 311.4 |
 
 ### Interpretasi
 
-- **MLP_NoHandling** memberikan F1-Score tertinggi (0.9437) — Focal Loss tanpa imbalance handling tambahan sudah optimal
-- **MLP_ClassWeight** (Focal α=0.5 + class_weight) hampir menyamai (F1=0.9427) dengan waktu training lebih cepat
-- **TabNet** unggul di Recall tertinggi (TabNet_ClassWeight: 0.9384) tapi Precision lebih rendah sehingga F1 di bawah MLP
+- **TabNet_NoHandling** memberikan F1-Score tertinggi (0.9302) — setelah outlier handling winsorizing, distribusi data lebih stabil sehingga TabNet unggul dengan *attention-based feature selection*
+- **MLP_ClassWeight** dan **MLP_NoHandling** tetap kompetitif (~0.92-0.93 F1) dengan waktu training lebih cepat (56-88s vs 188s)
+- **TabNet_SMOTE_ENN** memiliki Precision rendah (0.787) karena SMOTE-ENN memperkenalkan sample sintetis yang tidak sesuai dengan representasi TabNet
 
 ---
 
@@ -310,7 +323,7 @@ pip install uvicorn
 
 ```bash
 ls -la models/
-# Pastikan best_model.h5, scaler.pkl, encoders.pkl, feature_info.json ada
+# Pastikan best_model.h5, tabnet_best_model/, scaler.pkl, encoders.pkl, feature_info.json ada
 ```
 
 ### Error: Keras version incompatibility (`GlorotUniform`)

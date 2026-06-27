@@ -11,13 +11,13 @@
     "salary"
   ],
   "target_col": "left",
-  "best_model": "MLP_NoHandling",
-  "f1_score": 0.9437229437229437,
-  "accuracy": 0.974,
-  "recall": 0.9159663865546218,
-  "precision": 0.9732142857142857,
-  "optimal_threshold": 0.40,
+  "best_model": "TabNet_NoHandling",
+  "f1_score": 0.9302325581395349,
+  "accuracy": 0.9775,
+  "recall": 0.9045226130653267,
+  "precision": 0.9574468085106383,
+  "optimal_threshold": 0.5500000000000002,
   "input_dim": 9,
-  "dataset_size": 14999,
-  "model_type": "mlp"
+  "dataset_size": 11991,
+  "model_type": "tabnet"
 }
